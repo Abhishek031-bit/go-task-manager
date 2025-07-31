@@ -1,0 +1,20 @@
+# Go build files
+/bin
+/pkg
+/vendor
+
+# Go test files
+/test
+
+# IDE and editor files
+.vscode
+.idea
+
+# Log files
+tmp/build-errors.log
+
+# Environment files
+.env
+
+# Database files
+task.db
