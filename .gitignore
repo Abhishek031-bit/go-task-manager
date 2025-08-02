@@ -11,7 +11,7 @@
 .idea
 
 # Log files
-tmp/build-errors.log
+tmp/
 
 # Environment files
 .env

@@ -12,8 +12,14 @@ func SetupRoutes(app *fiber.App) {
 	auth := api.Group("/auth")
 	auth.Post("/register", controllers.Register)
 	auth.Post("/login", controllers.Login)
+	auth.Post("/refresh", middleware.Protected(), controllers.Refresh)
 
 	api.Get("/profile", middleware.Protected(), controllers.Profile)
-}
 
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQyNDA3NjAsInVzZXJfaWQiOjF9.OHMkrOVUZJdb9jPgEAgB52ZJYTjP5xlmpz_EXcNflr4
+	task := api.Group("/tasks", middleware.Protected())
+	task.Post("/", controllers.CreateTask)
+	task.Get("/", controllers.GetTasks)
+	task.Get("/:id", controllers.GetTask)
+	task.Put("/:id", controllers.UpdateTask)
+	task.Delete("/:id", controllers.DeleteTask)
+}

@@ -8,6 +8,7 @@ import (
 )
 
 var JWT_SECRET string
+var DATABASE_URL string
 
 func LoadEnv() {
 	err := godotenv.Load()
@@ -17,5 +18,9 @@ func LoadEnv() {
 	JWT_SECRET = os.Getenv("JWT_SECRET")
 	if JWT_SECRET == "" {
 		log.Fatal("JWT_SECRET is not set in .env")
+	}
+	DATABASE_URL = os.Getenv("DATABASE_URL")
+	if DATABASE_URL == "" {
+		log.Fatal("DATABASE_URL is not set in .env")
 	}
 }

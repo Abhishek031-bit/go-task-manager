@@ -1,6 +1,9 @@
 package database
 
 import (
+	"fmt"
+	"log"
+	"task-manager/config"
 	"task-manager/models"
 
 	"gorm.io/driver/sqlite"
@@ -10,11 +13,12 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	db, err := gorm.Open(sqlite.Open("task.db"), &gorm.Config{})
+	var err error
+	DB, err = gorm.Open(sqlite.Open(config.DATABASE_URL), &gorm.Config{})
 	if err != nil {
-		panic("❌Failed to connect database")
+		log.Fatal("❌ Failed to connect to database")
 	}
-	println("✅Connected to database")
-	db.AutoMigrate(&models.User{})
-	DB = db
+	fmt.Println("✅ Connected to database")
+	DB.AutoMigrate(&models.User{}, &models.Task{})
+	fmt.Println("Database migrated")
 }

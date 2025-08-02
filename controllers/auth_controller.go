@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"strings"
 	"task-manager/database"
+	"task-manager/jobs"
 	"task-manager/models"
 	"task-manager/utils"
+	"task-manager/workers"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -36,6 +39,16 @@ func Register(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to generate token"})
 	}
+
+	// Dispatch a welcome email job
+	workers.JobQueue <- workers.Job{
+		Type: jobs.EmailJob,
+		Payload: map[string]any{
+			"name":  user.Name,
+			"email": user.Email,
+		},
+	}
+
 	return c.JSON(&fiber.Map{"message": "User created successfully", "token": token})
 }
 
@@ -75,4 +88,17 @@ func Profile(c *fiber.Ctx) error {
 		"name":  user.Name,
 		"email": user.Email,
 	})
+}
+
+func Refresh(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Missing or malformed JWT"})
+	}
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	newToken, err := utils.RefreshToken(tokenStr)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Invalid or expired JWT"})
+	}
+	return c.JSON(&fiber.Map{"token": newToken})
 }
