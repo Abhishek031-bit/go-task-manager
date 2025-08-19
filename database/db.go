@@ -23,5 +23,5 @@ func ConnectDB() {
 	}
 	fmt.Println("✅ Connected to database")
 	DB.AutoMigrate(&models.User{}, &models.Task{})
-	fmt.Println("Database migrated")
+	fmt.Println("-----Database migrated-----")
 }

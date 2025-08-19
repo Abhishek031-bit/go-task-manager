@@ -8,8 +8,11 @@ import (
 	"task-manager/utils"
 	"task-manager/workers"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
+
+var validate = validator.New()
 
 type RegisterInput struct {
 	Name     string `json:"name"`
@@ -22,15 +25,22 @@ func Register(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"err": "Invalid input"})
 	}
+
+	user := models.User{
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
+	}
+
+	if err := validate.Struct(user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"err": err.Error()})
+	}
+
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to hash password"})
 	}
-	user := models.User{
-		Name:     input.Name,
-		Email:    input.Email,
-		Password: hashedPassword,
-	}
+	user.Password = hashedPassword
 	result := database.DB.Create(&user)
 	if result.Error != nil {
 		return c.Status(fiber.StatusConflict).JSON(&fiber.Map{"err": "Email already exists"})

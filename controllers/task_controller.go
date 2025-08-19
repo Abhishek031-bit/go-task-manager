@@ -3,7 +3,6 @@ package controllers
 import (
 	"task-manager/database"
 	"task-manager/models"
-	"task-manager/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,6 +14,12 @@ func CreateTask(c *fiber.Ctx) error {
 	}
 	userID := c.Locals("user_id").(uint)
 	task.UserID = userID
+
+	// If DueDate is provided, parse it
+	if task.DueDate != nil && task.DueDate.IsZero() {
+		task.DueDate = nil // Ensure zero time is treated as null
+	}
+
 	if err := database.DB.Create(&task).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to create task"})
 	}
@@ -24,7 +29,7 @@ func CreateTask(c *fiber.Ctx) error {
 func GetTasks(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
 	var tasks []models.Task
-	if err := database.DB.Scopes(utils.Paginate(c)).Preload("User").Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
+	if err := database.DB.Preload("User").Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to get tasks"})
 	}
 	return c.JSON(tasks)
@@ -54,6 +59,13 @@ func UpdateTask(c *fiber.Ctx) error {
 	task.Title = input.Title
 	task.Description = input.Description
 	task.Status = input.Status
+	task.DueDate = input.DueDate // Update DueDate
+
+	// Ensure zero time is treated as null for DueDate
+	if task.DueDate != nil && task.DueDate.IsZero() {
+		task.DueDate = nil
+	}
+
 	if err := database.DB.Save(&task).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to update task"})
 	}
