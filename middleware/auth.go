@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"task-manager/config"
+	"task-manager/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -16,6 +17,11 @@ func Protected() fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Missing or malformed JWT"})
 		}
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if utils.IsTokenBlacklisted(tokenStr) {
+			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Invalid or expired JWT"})
+		}
+
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")

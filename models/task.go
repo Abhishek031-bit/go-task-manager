@@ -7,6 +7,6 @@ type Task struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Status      string `json:"status" gorm:"default:'pending'"`
-	UserID      uint   `json:"user_id"`
-	User        User   `gorm:"foreignKey:UserID"`
+	UserID      uint   `json:"user_id" gorm:"not null"`
+	User        User   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

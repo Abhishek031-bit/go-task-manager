@@ -8,13 +8,16 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
 
 func ConnectDB() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open(config.DATABASE_URL), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open(config.DATABASE_URL), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		log.Fatal("❌ Failed to connect to database")
 	}

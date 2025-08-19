@@ -1,12 +1,15 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"task-manager/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+var jwtBlacklist = make(map[string]bool)
 
 func GenerateToken(userID uint) (string, error) {
 	claims := jwt.MapClaims{
@@ -24,10 +27,41 @@ func RefreshToken(tokenStr string) (string, error) {
 		}
 		return []byte(config.JWT_SECRET), nil
 	})
-	if err != nil || !token.Valid {
-		return "", fmt.Errorf("invalid or expired token")
+
+	if err != nil {
+		return "", err
 	}
-	claims := token.Claims.(jwt.MapClaims)
-	userID := claims["user_id"].(float64)
+
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("invalid token claims")
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return "", errors.New("invalid token expiration")
+	}
+
+	if time.Now().Unix() > int64(exp) {
+		return "", errors.New("token has expired")
+	}
+
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return "", errors.New("invalid user ID in token")
+	}
+
 	return GenerateToken(uint(userID))
+}
+
+func BlacklistToken(token string) {
+	jwtBlacklist[token] = true
+}
+
+func IsTokenBlacklisted(token string) bool {
+	return jwtBlacklist[token]
 }

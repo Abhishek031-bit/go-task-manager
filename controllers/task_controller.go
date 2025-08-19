@@ -24,7 +24,7 @@ func CreateTask(c *fiber.Ctx) error {
 func GetTasks(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
 	var tasks []models.Task
-	if err := database.DB.Scopes(utils.Paginate(c)).Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
+	if err := database.DB.Scopes(utils.Paginate(c)).Preload("User").Where("user_id = ?", userID).Find(&tasks).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"err": "Failed to get tasks"})
 	}
 	return c.JSON(tasks)
@@ -34,7 +34,7 @@ func GetTask(c *fiber.Ctx) error {
 	taskID := c.Params("id")
 	userID := c.Locals("user_id").(uint)
 	var task models.Task
-	if err := database.DB.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+	if err := database.DB.Preload("User").Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(&fiber.Map{"err": "Task not found"})
 	}
 	return c.JSON(task)

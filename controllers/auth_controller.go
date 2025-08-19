@@ -98,7 +98,17 @@ func Refresh(c *fiber.Ctx) error {
 	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 	newToken, err := utils.RefreshToken(tokenStr)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Invalid or expired JWT"})
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(&fiber.Map{"token": newToken})
+}
+
+func Logout(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{"error": "Missing or malformed JWT"})
+	}
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	utils.BlacklistToken(tokenStr)
+	return c.JSON(&fiber.Map{"message": "Successfully logged out"})
 }

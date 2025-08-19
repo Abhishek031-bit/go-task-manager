@@ -5,21 +5,21 @@ import (
 	"task-manager/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func SetupRoutes(app *fiber.App) {
-	api := app.Group("/api")
-	auth := api.Group("/auth")
-	auth.Post("/register", controllers.Register)
-	auth.Post("/login", controllers.Login)
-	auth.Post("/refresh", middleware.Protected(), controllers.Refresh)
+	app.Post("/register", controllers.Register)
+	app.Post("/login", controllers.Login)
+	app.Post("/refresh", controllers.Refresh)
+	app.Post("/logout", controllers.Logout)
 
-	api.Get("/profile", middleware.Protected(), controllers.Profile)
-
-	task := api.Group("/tasks", middleware.Protected())
-	task.Post("/", controllers.CreateTask)
-	task.Get("/", controllers.GetTasks)
-	task.Get("/:id", controllers.GetTask)
-	task.Put("/:id", controllers.UpdateTask)
-	task.Delete("/:id", controllers.DeleteTask)
+	app.Get("/profile", middleware.Protected(), controllers.Profile)
+	tasks := app.Group("/tasks")
+	tasks.Use(logger.New(), middleware.Protected())
+	tasks.Get("/", controllers.GetTasks)
+	tasks.Post("/", controllers.CreateTask)
+	tasks.Get("/:id", controllers.GetTask)
+	tasks.Put("/:id", controllers.UpdateTask)
+	tasks.Delete("/:id", controllers.DeleteTask)
 }
